@@ -5,7 +5,7 @@
 
 import UIKit
 
-class ImagesListViewController: UIViewController {
+final class ImagesListViewController: UIViewController {
     @IBOutlet private var tableView: UITableView!
     private let photosName: [String] = Array(0..<20).map{ "\($0)" }
     private lazy var dateFormatter: DateFormatter = {
@@ -23,7 +23,7 @@ class ImagesListViewController: UIViewController {
 extension ImagesListViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return photosName.count
+        photosName.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -43,14 +43,8 @@ extension ImagesListViewController: UITableViewDataSource {
         }
         cell.cellImageView.image = image
         cell.dateLabel.text = dateFormatter.string(from: currentDate)
-        if indexPath.row%2 == 0 {
-            cell.likeButton.setImage(UIImage(named: "Like_Active"), for: .normal)
-        }
-        else {
-            cell.likeButton.setImage(UIImage(named: "Like_noActive"), for: .normal)
-        }
+        cell.likeButton.setImage(UIImage(resource: indexPath.row%2 == 0 ? .likeActive : .likeNoActive),for: .normal)
     }
-    
     
 }
 
