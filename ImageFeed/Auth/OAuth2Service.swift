@@ -11,37 +11,58 @@ struct OAuthTokenResponseBody: Decodable {
 
 enum OAuthError: Error {
     case createRequestError
+    case invalidRequest
 }
 
 final class OAuth2Service{
     static let shared = OAuth2Service()
     
+    private let urlSession = URLSession.shared
+    private var task: URLSessionTask?
+    private var lastCode: String?
+    
     private init() {}
     
     func fetchOAuthToken(code: String, completion: @escaping (Result<String, Error>) -> Void){
-        //ошибки пробрасываю в замыкание и вывожу в консоль в основном вызове = > здесь print не нужен
-        guard let request = getTokenRequest(code: code) else{
-            completion(.failure(OAuthError.createRequestError))
-            return }
-        let task = URLSession.shared.data(for: request){ result in
-            switch result{
-            case .success(let data):
-                do {
-                    let token = try JSONDecoder().decode(OAuthTokenResponseBody.self, from: data)
-                    completion(.success(token.access_token))
-                } catch {
-                    completion(.failure(error))
-                }
-            case .failure(let error):
-                completion(.failure(error))
+        assert(Thread.isMainThread)
+        if task != nil {
+            if lastCode != code {
+                task?.cancel()
+            } else {
+                print("fetchOAuthToken: invalid request - another one task with the same code")
+                completion(.failure(OAuthError.invalidRequest))
+                return
+            }
+        } else {
+            if lastCode == code {
+                print("fetchOAuthToken: invalid request - another one task with the same code")
+                completion(.failure(OAuthError.invalidRequest))
+                return
             }
         }
+        lastCode = code
+        guard let request = getTokenRequest(code: code) else{
+            print("fetchOAuthToken: request for the token is not created")
+            completion(.failure(OAuthError.createRequestError))
+            return }
+        let task = URLSession.shared.objectTask(for: request){ [weak self] (result: Result<OAuthTokenResponseBody, Error>) in
+            switch result{
+            case .success(let data):
+                completion(.success(data.access_token))
+            case .failure(let error):
+                print("fetchOAuthToken: \(error.localizedDescription)")
+                completion(.failure(error))
+            }
+            self?.task = nil
+            self?.lastCode = nil
+        }
+        self.task = task
         task.resume()
     }
     
     private func getTokenRequest(code: String) -> URLRequest? {
         guard var urlComponents = URLComponents(string: Constants.unsplashGetTokenURLString) else {
-            print("Error creating URL components")
+            print("getTokenRequest: error creating URL components")
             return nil
         }
         urlComponents.queryItems = [
@@ -52,7 +73,7 @@ final class OAuth2Service{
             URLQueryItem(name: "grant_type", value: "authorization_code")
         ]
         guard let url = urlComponents.url else {
-            print("Error creating URL")
+            print("getTokenRequest: error creating URL")
             return nil
         }
         var request = URLRequest(url: url)

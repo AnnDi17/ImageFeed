@@ -4,10 +4,10 @@
 //
 
 import UIKit
+import ProgressHUD
 
 protocol AuthViewControllerDelegate: AnyObject {
     func didAuthenticate(_ vc: AuthViewController)
-    var storage: OAuth2TokenStorage { get }
 }
 
 final class AuthViewController: UIViewController, WebViewViewControllerDelegate {
@@ -48,15 +48,24 @@ final class AuthViewController: UIViewController, WebViewViewControllerDelegate 
     
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
         vc.navigationController?.popViewController(animated: true)
+        UIBlockingProgressHUD.show()
         OAuth2Service.shared.fetchOAuthToken(code: code){[weak self] result in
-            guard let self=self else { return }
+            UIBlockingProgressHUD.dismiss()
+            guard let self else { return }
             switch result {
             case .success(let token):
-                delegate?.storage.token = token
+                OAuth2TokenStorage.shared.token = token
                 self.delegate?.didAuthenticate(self)
             case .failure(let error):
+                print("webViewViewController: \(error.localizedDescription)")
+                let alert = UIAlertController(
+                    title: "Что-то пошло не так",
+                    message: "Не удалось войти в систему",
+                    preferredStyle: .alert)
+                let okAction = UIAlertAction(title: "Ок", style: .default, handler: nil)
+                alert.addAction(okAction)
+                present(alert, animated: true, completion: nil)
                 vc.dismiss(animated: true)
-                print("Error: \(error)")
             }
         }
     }
