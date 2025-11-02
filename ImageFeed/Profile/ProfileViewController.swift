@@ -4,20 +4,25 @@
 //
 
 import UIKit
+import Kingfisher
 
 final class ProfileViewController: UIViewController {
+    
+    private var profilePhotoImageView = UIImageView()
+    private var profileImageServiceObserver: NSObjectProtocol?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let profilePhotoView = createProfileView()
+        view.backgroundColor = .YPBlack
+        
         let nameLabel = createNameLabel()
         let nicknameLabel = createNicknameLabel()
         let descriptionLabel = createDescriptionLabel()
         let exitButton = createExitButton()
         
         view.addSubviews([
-            profilePhotoView,
+            profilePhotoImageView,
             nameLabel,
             nicknameLabel,
             descriptionLabel,
@@ -25,32 +30,55 @@ final class ProfileViewController: UIViewController {
         ])
         
         NSLayoutConstraint.activate([
-            profilePhotoView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 32),
-            profilePhotoView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            profilePhotoView.widthAnchor.constraint(equalToConstant: 70),
-            profilePhotoView.heightAnchor.constraint(equalTo: profilePhotoView.widthAnchor),
-            nameLabel.topAnchor.constraint(equalTo: profilePhotoView.bottomAnchor, constant: 8),
-            nameLabel.leadingAnchor.constraint(equalTo: profilePhotoView.leadingAnchor),
+            profilePhotoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 32),
+            profilePhotoImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            profilePhotoImageView.widthAnchor.constraint(equalToConstant: 70),
+            profilePhotoImageView.heightAnchor.constraint(equalTo: profilePhotoImageView.widthAnchor),
+            nameLabel.topAnchor.constraint(equalTo: profilePhotoImageView.bottomAnchor, constant: 8),
+            nameLabel.leadingAnchor.constraint(equalTo: profilePhotoImageView.leadingAnchor),
             nicknameLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 8),
-            nicknameLabel.leadingAnchor.constraint(equalTo: profilePhotoView.leadingAnchor),
+            nicknameLabel.leadingAnchor.constraint(equalTo: profilePhotoImageView.leadingAnchor),
             descriptionLabel.topAnchor.constraint(equalTo: nicknameLabel.bottomAnchor, constant: 8),
-            descriptionLabel.leadingAnchor.constraint(equalTo: profilePhotoView.leadingAnchor),
+            descriptionLabel.leadingAnchor.constraint(equalTo: profilePhotoImageView.leadingAnchor),
             exitButton.widthAnchor.constraint(equalToConstant: 44),
             exitButton.heightAnchor.constraint(equalTo: exitButton.widthAnchor),
-            exitButton.centerYAnchor.constraint(equalTo: profilePhotoView.centerYAnchor),
+            exitButton.centerYAnchor.constraint(equalTo: profilePhotoImageView.centerYAnchor),
             exitButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
         ])
+        
+        nameLabel.text = ProfileService.shared.profile?.name
+        nicknameLabel.text = ProfileService.shared.profile?.loginName
+        descriptionLabel.text = ProfileService.shared.profile?.bio
+        settingsForProfileView()
+        
+        profileImageServiceObserver = NotificationCenter.default
+            .addObserver(
+                forName: ProfileImageService.didChangeNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                guard let self else { return }
+                self.updateAvatar()
+            }
+        updateAvatar()
     }
     
-    private func createProfileView() -> UIImageView{
-        let imageForProfile = UIImage(resource: .profilePhoto)
-        let profilePhotoView = UIImageView(image: imageForProfile)
-        return profilePhotoView
+    private func updateAvatar() {
+        guard
+            let profileImageURL = ProfileImageService.shared.avatarURL,
+            let url = URL(string: profileImageURL)
+        else { return }
+        profilePhotoImageView.kf.setImage(
+            with: url)
+    }
+    
+    private func settingsForProfileView() -> Void {
+        profilePhotoImageView.layer.cornerRadius = 35
+        profilePhotoImageView.layer.masksToBounds = true
     }
     
     private func createNameLabel() -> UILabel{
         let nameLabel = UILabel()
-        nameLabel.text = "Екатерина Новикова"
         nameLabel.font = UIFont.boldSystemFont(ofSize: 23)
         nameLabel.textColor = .white
         return nameLabel
@@ -58,7 +86,6 @@ final class ProfileViewController: UIViewController {
     
     private func createNicknameLabel() -> UILabel{
         let nicknameLabel = UILabel()
-        nicknameLabel.text = "@ekaterina_nov"
         nicknameLabel.font = UIFont.systemFont(ofSize: 13)
         nicknameLabel.textColor = .YPGray
         return nicknameLabel
@@ -66,7 +93,6 @@ final class ProfileViewController: UIViewController {
     
     private func createDescriptionLabel() -> UILabel{
         let descriptionLabel = UILabel()
-        descriptionLabel.text = "Hello, world!"
         descriptionLabel.font = UIFont.systemFont(ofSize: 13)
         descriptionLabel.textColor = .white
         return descriptionLabel
