@@ -54,6 +54,14 @@ extension ImagesListViewController: UITableViewDataSource {
         return imageListCell
     }
     
+    func tableView(
+      _ tableView: UITableView,
+      willDisplay cell: UITableViewCell,
+      forRowAt indexPath: IndexPath
+    ) {
+        // ...
+    } 
+    
     private func configCell(for cell: ImagesListCell, with indexPath: IndexPath){
         let imageName = photosName[indexPath.row]
         let currentDate = Date()
