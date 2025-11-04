@@ -12,4 +12,6 @@ struct Photo {
     let thumbImageURL: String
     let largeImageURL: String
     let isLiked: Bool
+    var isLoaded: Bool
+    var thumbImageSize: CGSize
 }

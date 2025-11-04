@@ -12,7 +12,7 @@ enum ImagesListServiceError: Error {
 }
 
 final class ImagesListService {
-
+    
     static let shared = ImagesListService()
     static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
     
@@ -28,7 +28,7 @@ final class ImagesListService {
     
     private init() {}
     
-    func fetchPhotosNextPage(username: String, token: String, _ completion: @escaping (Result<[Photo], Error>) -> Void){
+    func fetchPhotosNextPage(token: String, _ completion: @escaping (Result<[Photo], Error>) -> Void){
         
         let nextPage = (lastLoadedPage ?? 0) + 1
         var newPhotos: [Photo] = []
@@ -60,7 +60,7 @@ final class ImagesListService {
                 completion(.success(newPhotos))
                 NotificationCenter.default
                     .post(
-                        name: ProfileImageService.didChangeNotification,
+                        name: ImagesListService.didChangeNotification,
                         object: self,
                         userInfo: ["Info": newPhotos])
             case .failure(let error):
@@ -74,14 +74,26 @@ final class ImagesListService {
     }
     
     private func getPhotosNextPageRequest(with authToken: String, page: Int, perPage: Int) -> URLRequest? {
-        guard let url = URL(string: Constants.defaultBaseURL.absoluteString + "/photos") else {
+        /*guard let url = URL(string: Constants.defaultBaseURL.absoluteString + "/photos") else {
+         print("getPhotosNextPageRequest: error creating url")
+         return nil
+         }*/
+        
+        var urlComponents = URLComponents(string: Constants.defaultBaseURL.absoluteString + "/photos")
+        urlComponents?.queryItems = [
+            URLQueryItem(name: "page", value: "\(page)"),
+            URLQueryItem(name: "per_page", value: "\(perPage)")
+        ]
+        
+        guard let url = urlComponents?.url else {
             print("getPhotosNextPageRequest: error creating url")
             return nil
         }
+        
         var request = URLRequest(url: url)
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("\(page)", forHTTPHeaderField: "page")
-        request.setValue("\(perPage)", forHTTPHeaderField: "per_page")
+        //request.setValue("\(page)", forHTTPHeaderField: "page")
+        //request.setValue("\(perPage)", forHTTPHeaderField: "per_page")
         request.httpMethod = "GET"
         return request
     }
@@ -94,7 +106,9 @@ final class ImagesListService {
             welcomeDescription: image.description,
             thumbImageURL: image.urls.thumb,
             largeImageURL: image.urls.full,
-            isLiked: image.isLiked
+            isLiked: image.isLiked,
+            isLoaded: false,
+            thumbImageSize: .zero
         )
         return photo
     }

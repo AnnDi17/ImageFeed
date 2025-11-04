@@ -15,4 +15,9 @@ final class ImagesListCell: UITableViewCell {
     
     @IBAction func likeTap(_ sender: UIButton) {
     }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        cellImageView.kf.cancelDownloadTask()
+    }
 }
