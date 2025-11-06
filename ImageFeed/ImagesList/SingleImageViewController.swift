@@ -5,15 +5,24 @@
 
 
 import UIKit
+import Kingfisher
 
 final class SingleImageViewController: UIViewController {
-    var image: UIImage? {
+    var fullImageURL: String? {
         didSet {
             guard isViewLoaded else { return }
-            guard let image else { return }
-            imageView.image = image
-            imageView.frame.size = image.size
-            rescaleAndCenterImageInScrollView(image: image)
+            guard let fullImageURL else { return }
+            let url = URL(string: fullImageURL)
+            imageView.kf.setImage(with: url) { [weak self] result in
+                guard let self = self else { return }
+                switch result {
+                case .success(let imageResult):
+                    imageView.frame.size = imageResult.image.size
+                    self.rescaleAndCenterImageInScrollView(image: imageResult.image)
+                case .failure:
+                    print("SingleImageViewController: Error loading image")
+                }
+            }
         }
     }
     
@@ -23,13 +32,26 @@ final class SingleImageViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        scrollView.delegate = self
+        scrollView.isUserInteractionEnabled = true
         shareButton.layer.cornerRadius = shareButton.frame.size.width/2
         scrollView.maximumZoomScale = 1.25
         scrollView.minimumZoomScale = 0.1
-        guard let image else { return }
-        imageView.image = image
-        imageView.frame.size = image.size
-        rescaleAndCenterImageInScrollView(image: image)
+        guard let fullImageURL else { return }
+        UIBlockingProgressHUD.show()
+        let url = URL(string: fullImageURL)
+        imageView.kf.setImage(with: url) { [weak self] result in
+            UIBlockingProgressHUD.dismiss()
+            
+            guard let self = self else { return }
+            switch result {
+            case .success(let imageResult):
+                imageView.frame.size = imageResult.image.size
+                self.rescaleAndCenterImageInScrollView(image: imageResult.image)
+            case .failure:
+                print("SingleImageViewController: Error loading image")
+            }
+        }
     }
     
     @IBAction func didTapShareButton(_ sender: UIButton) {

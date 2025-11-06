@@ -24,7 +24,8 @@ final class ImagesListService {
     private let perPage = 10
     
     private let urlSession = URLSession.shared
-    private var task: URLSessionTask?
+    private var taskForNextPage: URLSessionTask?
+    private var taskForLike: URLSessionTask?
     
     private init() {}
     
@@ -35,15 +36,15 @@ final class ImagesListService {
         
         assert(Thread.isMainThread)
         
-        if task != nil {
+        if taskForNextPage != nil {
             print("fetchPhotosNextPage: invalid request - another one task")
             completion(.failure(ImagesListServiceError.duplicateRequest))
             return
         }
         
         guard let request = getPhotosNextPageRequest(with: token, page: nextPage, perPage: perPage) else {
-            print("fetchProfileImageURL: request for the image URL is not created")
-            completion(.failure(ProfileImageError.createRequestError))
+            print("fetchPhotosNextPage: request for the image URL is not created")
+            completion(.failure(ImagesListServiceError.createRequestError))
             return
         }
         
@@ -67,17 +68,13 @@ final class ImagesListService {
                 print("fetchPhotosNextPage: \(error.localizedDescription)")
                 completion(.failure(error))
             }
-            self.task = nil
+            self.taskForNextPage = nil
         }
-        self.task = task
+        self.taskForNextPage = task
         task.resume()
     }
     
-    private func getPhotosNextPageRequest(with authToken: String, page: Int, perPage: Int) -> URLRequest? {
-        /*guard let url = URL(string: Constants.defaultBaseURL.absoluteString + "/photos") else {
-         print("getPhotosNextPageRequest: error creating url")
-         return nil
-         }*/
+    private func getPhotosNextPageRequest(with token: String, page: Int, perPage: Int) -> URLRequest? {
         
         var urlComponents = URLComponents(string: Constants.defaultBaseURL.absoluteString + "/photos")
         urlComponents?.queryItems = [
@@ -91,10 +88,65 @@ final class ImagesListService {
         }
         
         var request = URLRequest(url: url)
-        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-        //request.setValue("\(page)", forHTTPHeaderField: "page")
-        //request.setValue("\(perPage)", forHTTPHeaderField: "per_page")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.httpMethod = "GET"
+        return request
+    }
+    
+    func changeLike(with token: String, photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
+        
+        assert(Thread.isMainThread)
+        
+        if taskForLike != nil {
+            print("changeLike: invalid request - another one task")
+            completion(.failure(ImagesListServiceError.duplicateRequest))
+            return
+        }
+        
+        guard let request = changeLikeRequest(with: token, id: photoId, isLike: isLike) else {
+            print("changeLike: request for the image URL is not created")
+            completion(.failure(ImagesListServiceError.createRequestError))
+            return
+        }
+        
+        let task = urlSession.objectTask(for: request){ [weak self] (result: Result<SinglePhoto, Error>) in
+            guard let self else { return }
+            switch result {
+            case .success(let data):
+                if let index = self.photos.firstIndex(where: { $0.id == photoId }) {
+                    let photo = self.photos[index]
+                    let newPhoto = Photo(
+                        id: photo.id,
+                        size: photo.size,
+                        createdAt: photo.createdAt,
+                        welcomeDescription: photo.welcomeDescription,
+                        thumbImageURL: photo.thumbImageURL,
+                        largeImageURL: photo.largeImageURL,
+                        isLiked: data.photo.isLiked,
+                        isLoaded: photo.isLoaded,
+                        thumbImageSize: photo.thumbImageSize
+                    )
+                    self.photos = self.photos.withReplaced(itemAt: index, newValue: newPhoto)
+                }
+                completion(.success(()))
+            case .failure(let error):
+                print("changeLike: \(error.localizedDescription)")
+                completion(.failure(error))
+            }
+            self.taskForLike = nil
+        }
+        self.taskForLike = task
+        task.resume()
+    }
+    
+    private func changeLikeRequest(with authToken: String, id: String, isLike: Bool) -> URLRequest? {
+        guard let url = URL(string: Constants.defaultBaseURL.absoluteString + "/photos/\(id)/like") else {
+            print("changeLikeRequest: error creating url")
+            return nil
+        }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
+        request.httpMethod = isLike ? "POST":"DELETE"
         return request
     }
     
@@ -113,5 +165,8 @@ final class ImagesListService {
         return photo
     }
     
+    func cleanData(){
+        photos = []
+    }
 }
 

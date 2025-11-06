@@ -4,6 +4,10 @@
 //
 import UIKit
 
+struct SinglePhoto: Decodable {
+    let photo: PhotoResult
+}
+
 struct PhotoResult: Decodable {
     
     let id: String

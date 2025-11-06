@@ -38,14 +38,6 @@ final class AuthViewController: UIViewController, WebViewViewControllerDelegate 
         
     }
     
-    private func configureBackButton() {
-        navigationController?.navigationBar.backIndicatorImage = UIImage(resource: .navBackButton)
-        navigationController?.navigationBar.backIndicatorTransitionMaskImage = UIImage(resource: .navBackButton)
-        navigationItem.backButtonDisplayMode = .minimal
-        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
-        navigationItem.backBarButtonItem?.tintColor = UIColor.YPBlack
-    }
-    
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
         vc.navigationController?.popViewController(animated: true)
         UIBlockingProgressHUD.show()
@@ -58,13 +50,7 @@ final class AuthViewController: UIViewController, WebViewViewControllerDelegate 
                 self.delegate?.didAuthenticate(self)
             case .failure(let error):
                 print("webViewViewController: \(error.localizedDescription)")
-                let alert = UIAlertController(
-                    title: "Что-то пошло не так",
-                    message: "Не удалось войти в систему",
-                    preferredStyle: .alert)
-                let okAction = UIAlertAction(title: "Ок", style: .default, handler: nil)
-                alert.addAction(okAction)
-                present(alert, animated: true, completion: nil)
+                showErrorAlert()
                 vc.dismiss(animated: true)
             }
         }
@@ -72,6 +58,24 @@ final class AuthViewController: UIViewController, WebViewViewControllerDelegate 
     
     func webViewViewControllerDidCancel(_ vc: WebViewViewController) {
         dismiss(animated: true)
+    }
+    
+    private func configureBackButton() {
+        navigationController?.navigationBar.backIndicatorImage = UIImage(resource: .navBackButton)
+        navigationController?.navigationBar.backIndicatorTransitionMaskImage = UIImage(resource: .navBackButton)
+        navigationItem.backButtonDisplayMode = .minimal
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
+        navigationItem.backBarButtonItem?.tintColor = UIColor.YPBlack
+    }
+    
+    private func showErrorAlert() {
+        let alert = UIAlertController(
+            title: "Что-то пошло не так(",
+            message: "Не удалось войти в систему",
+            preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "Ок", style: .default, handler: nil)
+        alert.addAction(okAction)
+        present(alert, animated: true, completion: nil)
     }
     
 }

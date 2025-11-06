@@ -102,6 +102,28 @@ final class ProfileViewController: UIViewController {
         let exitButton = UIButton()
         let imageForExit = UIImage(resource: .exit)
         exitButton.setImage(imageForExit, for: .normal)
+        exitButton.addTarget(self, action: #selector(logout), for: .touchUpInside)
         return exitButton
     }
+    
+    @objc private func logout(){
+        showExitAlert(){
+            ProfileLogoutService.shared.logout()
+        }
+    }
+    
+    private func showExitAlert(handler: @escaping ()->Void) {
+        let alert = UIAlertController(
+            title: "Пока, пока!",
+            message: "Уверены, что хотите выйти?",
+            preferredStyle: .alert)
+        let yesAction = UIAlertAction(title: "Да", style: .default){_ in
+            handler()
+        }
+        alert.addAction(yesAction)
+        let noAction = UIAlertAction(title: "Нет", style: .default, handler: nil)
+        alert.addAction(noAction)
+        present(alert, animated: true, completion: nil)
+    }
+    
 }

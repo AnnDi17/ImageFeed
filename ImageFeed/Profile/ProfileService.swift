@@ -65,5 +65,9 @@ final class ProfileService {
         request.httpMethod = "GET"
         return request
     }
+    
+    func cleanData(){
+        self.profile = nil
+    }
 }
 
