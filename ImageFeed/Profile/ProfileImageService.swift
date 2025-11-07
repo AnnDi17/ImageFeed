@@ -74,5 +74,9 @@ final class ProfileImageService {
         request.httpMethod = "GET"
         return request
     }
+    
+    func cleanData() {
+        self.avatarURL = nil
+    }
 }
 

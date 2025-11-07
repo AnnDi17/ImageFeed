@@ -8,7 +8,7 @@ import UIKit
 struct ProfileResult: Decodable {
     let username: String
     let first_name: String
-    let last_name: String
+    let last_name: String?
     let bio: String?
 }
 
@@ -38,9 +38,10 @@ final class ProfileService {
         let task = urlSession.objectTask(for: request){ [weak self] (result: Result<ProfileResult, Error>) in
             switch result{
             case .success(let data):
+                let lastName = data.last_name ?? ""
                 let profile = Profile(
                     username: data.username,
-                    name: data.first_name + " " + data.last_name,
+                    name: data.first_name + " " + lastName,
                     bio: data.bio ?? ""
                 )
                 self?.profile = profile
@@ -64,6 +65,10 @@ final class ProfileService {
         request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         request.httpMethod = "GET"
         return request
+    }
+    
+    func cleanData(){
+        self.profile = nil
     }
 }
 
