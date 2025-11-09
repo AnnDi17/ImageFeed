@@ -53,7 +53,7 @@ final class AuthViewController: UIViewController, WebViewViewControllerDelegate 
                 OAuth2TokenStorage.shared.token = token
                 self.delegate?.didAuthenticate(self)
             case .failure(let error):
-                print("webViewViewController: \(error.localizedDescription)")
+                print("AuthViewController.webViewViewController: \(error.localizedDescription)")
                 showErrorAlert()
                 vc.dismiss(animated: true)
             }

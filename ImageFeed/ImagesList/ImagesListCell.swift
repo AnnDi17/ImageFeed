@@ -5,7 +5,7 @@
 
 import UIKit
 
-final class ImagesListCell: UITableViewCell {
+class ImagesListCell: UITableViewCell {
     
     static let reuseIdentifier = "ImagesListCell"
     
@@ -26,5 +26,6 @@ final class ImagesListCell: UITableViewCell {
     
     func setIsLiked(_ isLiked: Bool) {
         likeButton.setImage(UIImage(resource: isLiked ? .likeActive : .likeNoActive),for: .normal)
+        likeButton.accessibilityIdentifier = isLiked ? "like button on" : "like button off"
     }
 }

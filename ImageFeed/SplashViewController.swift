@@ -68,7 +68,7 @@ final class SplashViewController: UIViewController, AuthViewControllerDelegate {
                 ImagesListService.shared.fetchPhotosNextPage(token: token){ result in }
                 self.switchToTabBarController()
             case .failure(let error):
-                print("fetchProfile: \(error)")
+                print("SplashViewController.fetchProfile: \(error)")
             }
         }
     }

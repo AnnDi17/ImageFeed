@@ -122,6 +122,7 @@ final class ProfileViewController: UIViewController, ProfileViewControllerProtoc
     private func createExitButton() -> UIButton{
         let exitButton = UIButton()
         let imageForExit = UIImage(resource: .exit)
+        exitButton.accessibilityIdentifier = "logout button"
         exitButton.setImage(imageForExit, for: .normal)
         exitButton.addTarget(self, action: #selector(logout), for: .touchUpInside)
         return exitButton

@@ -43,7 +43,6 @@ final class AuthHelper: AuthHelperProtocol {
     
     func code(from url: URL) -> String? {
         if
-            //let url = navigationAction.request.url,
             let urlComponents = URLComponents(string: url.absoluteString),
             urlComponents.path == "/oauth/authorize/native",
             let items = urlComponents.queryItems,

@@ -1,5 +1,5 @@
 //
-//  ImageFeedTests.swift
+//  ProfileViewTests.swift
 //  ImageFeedTests
 //
 
@@ -7,7 +7,7 @@
 import XCTest
 
 final class ProfileViewTests: XCTestCase {
-    func testViewControllerCallsViewDidLoad() {
+    func testViewControllerCallsPresenter() {
         //given
         let viewController = ProfileViewController()
         let presenter = ProfilePresenterSpy()

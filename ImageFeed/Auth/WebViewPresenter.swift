@@ -23,24 +23,6 @@ final class WebViewPresenter: WebViewPresenterProtocol {
     
     func viewDidLoad() {
         
-        /*guard var urlComponents = URLComponents(string: Constants.unsplashAuthorizeURLString) else {
-         print("WebViewPresenter.viewDidLoad: error creating URLComponents")
-         return
-         }
-         
-         urlComponents.queryItems = [
-         URLQueryItem(name: "client_id", value: Constants.accessKey),
-         URLQueryItem(name: "redirect_uri", value: Constants.redirectURI),
-         URLQueryItem(name: "response_type", value: "code"),
-         URLQueryItem(name: "scope", value: Constants.accessScope)
-         ]
-         
-         guard let url = urlComponents.url else {
-         print("WebViewPresenter.viewDidLoad: error creating URL")
-         return
-         }*/
-        //let request = URLRequest(url: url)
-        
         guard let request = authHelper.authRequest() else {
             print("WebViewPresenter.viewDidLoad: error creating URLRequest")
             return

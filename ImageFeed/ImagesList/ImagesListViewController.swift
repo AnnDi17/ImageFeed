@@ -13,7 +13,7 @@ protocol ImagesListViewControllerProtocol: AnyObject {
     func didUpdateCell(at indexPath: IndexPath)
     func setImage(for cell: ImagesListCell, with url: URL, _ completion: @escaping (Result<RetrieveImageResult, Error>) -> Void)
     func configLabel(for cell: ImagesListCell, with text: String)
-    func configLikeButton(for cell: ImagesListCell, with image: UIImage)
+    func configLikeButton(for cell: ImagesListCell, isLiked: Bool)
     
 }
 
@@ -94,6 +94,10 @@ extension ImagesListViewController: UITableViewDataSource {
         willDisplay cell: UITableViewCell,
         forRowAt indexPath: IndexPath
     ) {
+        let testMode =  ProcessInfo.processInfo.arguments.contains("testMode")
+        if testMode {
+            return
+        }
         if indexPath.row == tableView.numberOfRows(inSection: indexPath.section) - 1 {
             presenter?.getNewPhotos() {_ in}
         }
@@ -119,8 +123,10 @@ extension ImagesListViewController: UITableViewDataSource {
         cell.dateLabel.text = text
     }
     
-    func configLikeButton(for cell: ImagesListCell, with image: UIImage) {
+    func configLikeButton(for cell: ImagesListCell, isLiked: Bool) {
+        let image = UIImage(resource: isLiked ? .likeActive : .likeNoActive)
         cell.likeButton.setImage(image, for: .normal)
+        cell.likeButton.accessibilityIdentifier = isLiked ? "like button on" : "like button off"
     }
     
     private func configCell(for cell: ImagesListCell, with indexPath: IndexPath){
@@ -151,7 +157,6 @@ extension ImagesListViewController: ImagesListCellDelegate {
             guard let self else {return}
             switch result {
             case .success(let isLiked):
-                //guard let isLiked = self.presenter?.photos[indexPath.row].isLiked else {return}
                 cell.setIsLiked(isLiked)
                 UIBlockingProgressHUD.dismiss()
             case .failure(let error):

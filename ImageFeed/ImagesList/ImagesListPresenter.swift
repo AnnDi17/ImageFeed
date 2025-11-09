@@ -125,15 +125,14 @@ final class ImagesListPresenter: ImagesListPresenterProtocol {
                         } else {
                             self.view?.configLabel(for: cell, with: "")
                         }
-                        let image = UIImage(resource: self.photos[indexPath.row].isLiked ? .likeActive : .likeNoActive)
-                        self.view?.configLikeButton(for: cell, with: image)
+                        self.view?.configLikeButton(for: cell, isLiked: self.photos[indexPath.row].isLiked)
                     } else {
                         self.photos[indexPath.row].isLoaded = true
                         self.photos[indexPath.row].thumbImageSize = data.image.size
                         self.view?.didUpdateCell(at: indexPath)
                     }
                 case .failure(let error):
-                    print("configImageCell: \(error.localizedDescription), row: \(indexPath.row)")
+                    print("ImagesListPresenter.configImageCell: \(error.localizedDescription), row: \(indexPath.row)")
                 }
             }
         }

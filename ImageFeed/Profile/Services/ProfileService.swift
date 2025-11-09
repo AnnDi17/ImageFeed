@@ -30,7 +30,7 @@ final class ProfileService: ProfileServiceProtocol {
         assert(Thread.isMainThread)
         task?.cancel()
         guard let request = getProfileRequest(with: token) else{
-            print("fetchProfile: request for the profile is not created")
+            print("ProfileService.fetchProfile: request for the profile is not created")
             completion(.failure(ProfileError.createRequestError))
             return }
         let task = urlSession.objectTask(for: request){ [weak self] (result: Result<ProfileResult, Error>) in
@@ -45,7 +45,7 @@ final class ProfileService: ProfileServiceProtocol {
                 self?.profile = profile
                 completion(.success(profile))
             case .failure(let error):
-                print("fetchProfile: \(error.localizedDescription)")
+                print("ProfileService.fetchProfile: \(error.localizedDescription)")
                 completion(.failure(error))
             }
             self?.task = nil
@@ -56,7 +56,7 @@ final class ProfileService: ProfileServiceProtocol {
     
     private func getProfileRequest(with authToken: String) -> URLRequest? {
         guard let url = URL(string: Constants.defaultBaseURL.absoluteString + "/me") else {
-            print("getProfileRequest: error creating url")
+            print("ProfileService.getProfileRequest: error creating url")
             return nil
         }
         var request = URLRequest(url: url)

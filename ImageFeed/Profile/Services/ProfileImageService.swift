@@ -31,7 +31,7 @@ final class ProfileImageService: ProfileImageServiceProtocol {
         assert(Thread.isMainThread)
         task?.cancel()
         guard let request = getProfileImageRequest(with: token, username: username) else{
-            print("fetchProfileImageURL: request for the image URL is not created")
+            print("ProfileImageService.fetchProfileImageURL: request for the image URL is not created")
             completion(.failure(ProfileImageError.createRequestError))
             return }
         let task = urlSession.objectTask(for: request){ [weak self] (result: Result<UserResult, Error>) in
@@ -46,7 +46,7 @@ final class ProfileImageService: ProfileImageServiceProtocol {
                         object: self,
                         userInfo: ["URL": data.profileImage.small])
             case .failure(let error):
-                print("fetchProfileImageURL: \(error.localizedDescription)")
+                print("ProfileImageService.fetchProfileImageURL: \(error.localizedDescription)")
                 completion(.failure(error))
             }
             self.task = nil
@@ -57,7 +57,7 @@ final class ProfileImageService: ProfileImageServiceProtocol {
     
     private func getProfileImageRequest(with authToken: String, username: String) -> URLRequest? {
         guard let url = URL(string: Constants.defaultBaseURL.absoluteString + "/users/\(username)") else {
-            print("getProfileImageRequest: error creating url")
+            print("ProfileImageService.getProfileImageRequest: error creating url")
             return nil
         }
         var request = URLRequest(url: url)

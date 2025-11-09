@@ -1,5 +1,5 @@
 //
-//  Untitled.swift
+//  ProfilePresenterSpy.swift
 //  ImageFeed
 //
 

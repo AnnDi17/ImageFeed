@@ -28,15 +28,13 @@ final class WebViewViewController: UIViewController & WebViewViewControllerProto
     override func viewDidLoad() {
         super.viewDidLoad()
         webView.navigationDelegate = self
-        //loadAuthView()
+        webView.accessibilityIdentifier = "UnsplashWebView"
         presenter?.viewDidLoad()
-        //updateProgress()
         estimatedProgressObservation = webView.observe(
             \.estimatedProgress,
              options: [.new],
              changeHandler: { [weak self] _, _ in
                  guard let self else { return }
-                 //self.updateProgress()
                  presenter?.didUpdateProgressValue(webView.estimatedProgress)
              })
     }
@@ -66,7 +64,7 @@ extension WebViewViewController: WKNavigationDelegate{
             delegate.webViewViewController(self, didAuthenticateWithCode: code)
             decisionHandler(.cancel)
         } else {
-            print("webView: error getting code")
+            print("WebViewViewController.webView: error getting code")
             decisionHandler(.allow)
         }
     }

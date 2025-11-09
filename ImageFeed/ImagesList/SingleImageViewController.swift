@@ -30,6 +30,7 @@ final class SingleImageViewController: UIViewController {
     @IBOutlet private weak var scrollView: UIScrollView!
     @IBOutlet private var imageView: UIImageView!
     
+    @IBOutlet weak var backButton: UIButton!
     override func viewDidLoad() {
         super.viewDidLoad()
         scrollView.delegate = self
@@ -37,6 +38,7 @@ final class SingleImageViewController: UIViewController {
         shareButton.layer.cornerRadius = shareButton.frame.size.width/2
         scrollView.maximumZoomScale = 1.25
         scrollView.minimumZoomScale = 0.1
+        backButton.accessibilityIdentifier = "backButton"
         guard let fullImageURL else { return }
         UIBlockingProgressHUD.show()
         let url = URL(string: fullImageURL)
