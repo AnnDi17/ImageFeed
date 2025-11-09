@@ -6,20 +6,32 @@
 import UIKit
 import Kingfisher
 
-final class ProfileViewController: UIViewController {
+protocol ProfileViewControllerProtocol: AnyObject {
+    var presenter: ProfilePresenterProtocol? { get set }
+    func showExitAlert(handler: @escaping ()->Void)
+    func updateAvatar(with url: URL)
+}
+
+final class ProfileViewController: UIViewController, ProfileViewControllerProtocol {
     
-    private var profilePhotoImageView = UIImageView()
+    private(set) var profilePhotoImageView = UIImageView()
     private var profileImageServiceObserver: NSObjectProtocol?
+    
+    var presenter: ProfilePresenterProtocol?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .YPBlack
+        presenter?.viewDidLoad()
         
-        let nameLabel = createNameLabel()
-        let nicknameLabel = createNicknameLabel()
-        let descriptionLabel = createDescriptionLabel()
+        let profileData = presenter?.getProfile()
+        
+        let nameLabel = createNameLabel(with: profileData?.name)
+        let nicknameLabel = createNicknameLabel(with: profileData?.loginName)
+        let descriptionLabel = createDescriptionLabel(with: profileData?.bio)
         let exitButton = createExitButton()
+        
+        view.backgroundColor = .YPBlack
         
         view.addSubviews([
             profilePhotoImageView,
@@ -28,6 +40,8 @@ final class ProfileViewController: UIViewController {
             descriptionLabel,
             exitButton
         ])
+        
+        settingsForProfileView()
         
         NSLayoutConstraint.activate([
             profilePhotoImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 32),
@@ -46,11 +60,6 @@ final class ProfileViewController: UIViewController {
             exitButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
         ])
         
-        nameLabel.text = ProfileService.shared.profile?.name
-        nicknameLabel.text = ProfileService.shared.profile?.loginName
-        descriptionLabel.text = ProfileService.shared.profile?.bio
-        settingsForProfileView()
-        
         profileImageServiceObserver = NotificationCenter.default
             .addObserver(
                 forName: ProfileImageService.didChangeNotification,
@@ -58,61 +67,16 @@ final class ProfileViewController: UIViewController {
                 queue: .main
             ) { [weak self] _ in
                 guard let self else { return }
-                self.updateAvatar()
+                self.presenter?.avatarDidLoad()
             }
-        updateAvatar()
     }
     
-    private func updateAvatar() {
-        guard
-            let profileImageURL = ProfileImageService.shared.avatarURL,
-            let url = URL(string: profileImageURL)
-        else { return }
+    func updateAvatar(with url: URL) {
         profilePhotoImageView.kf.setImage(
             with: url)
     }
     
-    private func settingsForProfileView() -> Void {
-        profilePhotoImageView.layer.cornerRadius = 35
-        profilePhotoImageView.layer.masksToBounds = true
-    }
-    
-    private func createNameLabel() -> UILabel{
-        let nameLabel = UILabel()
-        nameLabel.font = UIFont.boldSystemFont(ofSize: 23)
-        nameLabel.textColor = .white
-        return nameLabel
-    }
-    
-    private func createNicknameLabel() -> UILabel{
-        let nicknameLabel = UILabel()
-        nicknameLabel.font = UIFont.systemFont(ofSize: 13)
-        nicknameLabel.textColor = .YPGray
-        return nicknameLabel
-    }
-    
-    private func createDescriptionLabel() -> UILabel{
-        let descriptionLabel = UILabel()
-        descriptionLabel.font = UIFont.systemFont(ofSize: 13)
-        descriptionLabel.textColor = .white
-        return descriptionLabel
-    }
-    
-    private func createExitButton() -> UIButton{
-        let exitButton = UIButton()
-        let imageForExit = UIImage(resource: .exit)
-        exitButton.setImage(imageForExit, for: .normal)
-        exitButton.addTarget(self, action: #selector(logout), for: .touchUpInside)
-        return exitButton
-    }
-    
-    @objc private func logout(){
-        showExitAlert(){
-            ProfileLogoutService.shared.logout()
-        }
-    }
-    
-    private func showExitAlert(handler: @escaping ()->Void) {
+    func showExitAlert(handler: @escaping ()->Void) {
         let alert = UIAlertController(
             title: "Пока, пока!",
             message: "Уверены, что хотите выйти?",
@@ -124,6 +88,47 @@ final class ProfileViewController: UIViewController {
         let noAction = UIAlertAction(title: "Нет", style: .default, handler: nil)
         alert.addAction(noAction)
         present(alert, animated: true, completion: nil)
+    }
+    
+    private func settingsForProfileView() -> Void {
+        profilePhotoImageView.layer.cornerRadius = 35
+        profilePhotoImageView.layer.masksToBounds = true
+    }
+    
+    private func createNameLabel(with text: String?) -> UILabel{
+        let nameLabel = UILabel()
+        nameLabel.font = UIFont.boldSystemFont(ofSize: 23)
+        nameLabel.textColor = .white
+        nameLabel.text = text ?? ""
+        return nameLabel
+    }
+    
+    private func createNicknameLabel(with text: String?) -> UILabel{
+        let nicknameLabel = UILabel()
+        nicknameLabel.font = UIFont.systemFont(ofSize: 13)
+        nicknameLabel.textColor = .YPGray
+        nicknameLabel.text = text ?? ""
+        return nicknameLabel
+    }
+    
+    private func createDescriptionLabel(with text: String?) -> UILabel{
+        let descriptionLabel = UILabel()
+        descriptionLabel.font = UIFont.systemFont(ofSize: 13)
+        descriptionLabel.textColor = .white
+        descriptionLabel.text = text ?? ""
+        return descriptionLabel
+    }
+    
+    private func createExitButton() -> UIButton{
+        let exitButton = UIButton()
+        let imageForExit = UIImage(resource: .exit)
+        exitButton.setImage(imageForExit, for: .normal)
+        exitButton.addTarget(self, action: #selector(logout), for: .touchUpInside)
+        return exitButton
+    }
+    
+    @objc func logout(){
+        presenter?.didExit()
     }
     
 }

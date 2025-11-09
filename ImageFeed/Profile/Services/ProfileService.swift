@@ -5,19 +5,17 @@
 
 import UIKit
 
-struct ProfileResult: Decodable {
-    let username: String
-    let first_name: String
-    let last_name: String?
-    let bio: String?
-}
-
 enum ProfileError: Error {
     case createRequestError
     case invalidRequest
 }
 
-final class ProfileService {
+protocol ProfileServiceProtocol {
+    var profile: Profile? { get }
+    func fetchProfile(_ token: String, completion: @escaping (Result<Profile, Error>) -> Void)
+}
+
+final class ProfileService: ProfileServiceProtocol {
     
     static let shared = ProfileService()
     

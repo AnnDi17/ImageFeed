@@ -11,7 +11,13 @@ enum ImagesListServiceError: Error {
     case invalidRequest
 }
 
-final class ImagesListService {
+protocol ImagesListServiceProtocol: AnyObject {
+    var photos: [Photo] {get}
+    func fetchPhotosNextPage(token: String, _ completion: @escaping (Result<[Photo], Error>) -> Void)
+    func changeLike(with token: String, photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void)
+}
+
+final class ImagesListService: ImagesListServiceProtocol {
     
     static let shared = ImagesListService()
     static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
@@ -74,25 +80,6 @@ final class ImagesListService {
         task.resume()
     }
     
-    private func getPhotosNextPageRequest(with token: String, page: Int, perPage: Int) -> URLRequest? {
-        
-        var urlComponents = URLComponents(string: Constants.defaultBaseURL.absoluteString + "/photos")
-        urlComponents?.queryItems = [
-            URLQueryItem(name: "page", value: "\(page)"),
-            URLQueryItem(name: "per_page", value: "\(perPage)")
-        ]
-        
-        guard let url = urlComponents?.url else {
-            print("getPhotosNextPageRequest: error creating url")
-            return nil
-        }
-        
-        var request = URLRequest(url: url)
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.httpMethod = "GET"
-        return request
-    }
-    
     func changeLike(with token: String, photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
         
         assert(Thread.isMainThread)
@@ -137,6 +124,25 @@ final class ImagesListService {
         }
         self.taskForLike = task
         task.resume()
+    }
+    
+    private func getPhotosNextPageRequest(with token: String, page: Int, perPage: Int) -> URLRequest? {
+        
+        var urlComponents = URLComponents(string: Constants.defaultBaseURL.absoluteString + "/photos")
+        urlComponents?.queryItems = [
+            URLQueryItem(name: "page", value: "\(page)"),
+            URLQueryItem(name: "per_page", value: "\(perPage)")
+        ]
+        
+        guard let url = urlComponents?.url else {
+            print("getPhotosNextPageRequest: error creating url")
+            return nil
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.httpMethod = "GET"
+        return request
     }
     
     private func changeLikeRequest(with authToken: String, id: String, isLike: Bool) -> URLRequest? {

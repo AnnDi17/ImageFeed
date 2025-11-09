@@ -259,7 +259,7 @@ CQ
         <!--Web View View Controller-->
         <scene sceneID="Cbd-DC-ZBl">
             <objects>
-                <viewController id="IzK-w1-aDC" customClass="WebViewViewController" customModule="ImageFeed" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="WebViewViewController" id="IzK-w1-aDC" customClass="WebViewViewController" customModule="ImageFeed" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="qfy-LQ-JUm">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

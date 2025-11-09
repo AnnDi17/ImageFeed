@@ -5,26 +5,17 @@
 
 import UIKit
 
-struct ImageURL: Decodable{
-    let small: String
-    let medium: String
-    let large: String
-}
-
-struct UserResult: Decodable {
-    let profileImage: ImageURL
-    
-    private enum CodingKeys: String, CodingKey {
-        case profileImage = "profile_image"
-    }
-}
-
 enum ProfileImageError: Error {
     case createRequestError
     case invalidRequest
 }
 
-final class ProfileImageService {
+protocol ProfileImageServiceProtocol {
+    var avatarURL: String? {get}
+    func fetchProfileImageURL(username: String, token: String, _ completion: @escaping (Result<String, Error>) -> Void)
+}
+
+final class ProfileImageService: ProfileImageServiceProtocol {
     
     static let shared = ProfileImageService()
     static let didChangeNotification = Notification.Name(rawValue: "ProfileImageProviderDidChange")
