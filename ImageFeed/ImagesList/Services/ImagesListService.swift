@@ -11,7 +11,13 @@ enum ImagesListServiceError: Error {
     case invalidRequest
 }
 
-final class ImagesListService {
+protocol ImagesListServiceProtocol: AnyObject {
+    var photos: [Photo] {get}
+    func fetchPhotosNextPage(token: String, _ completion: @escaping (Result<[Photo], Error>) -> Void)
+    func changeLike(with token: String, photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void)
+}
+
+final class ImagesListService: ImagesListServiceProtocol {
     
     static let shared = ImagesListService()
     static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
@@ -37,13 +43,13 @@ final class ImagesListService {
         assert(Thread.isMainThread)
         
         if taskForNextPage != nil {
-            print("fetchPhotosNextPage: invalid request - another one task")
+            print("ImagesListService.fetchPhotosNextPage: invalid request - another one task")
             completion(.failure(ImagesListServiceError.duplicateRequest))
             return
         }
         
         guard let request = getPhotosNextPageRequest(with: token, page: nextPage, perPage: perPage) else {
-            print("fetchPhotosNextPage: request for the image URL is not created")
+            print("ImagesListService.fetchPhotosNextPage: request for the image URL is not created")
             completion(.failure(ImagesListServiceError.createRequestError))
             return
         }
@@ -65,7 +71,7 @@ final class ImagesListService {
                         object: self,
                         userInfo: ["Info": newPhotos])
             case .failure(let error):
-                print("fetchPhotosNextPage: \(error.localizedDescription)")
+                print("ImagesListService.fetchPhotosNextPage: \(error.localizedDescription)")
                 completion(.failure(error))
             }
             self.taskForNextPage = nil
@@ -74,37 +80,18 @@ final class ImagesListService {
         task.resume()
     }
     
-    private func getPhotosNextPageRequest(with token: String, page: Int, perPage: Int) -> URLRequest? {
-        
-        var urlComponents = URLComponents(string: Constants.defaultBaseURL.absoluteString + "/photos")
-        urlComponents?.queryItems = [
-            URLQueryItem(name: "page", value: "\(page)"),
-            URLQueryItem(name: "per_page", value: "\(perPage)")
-        ]
-        
-        guard let url = urlComponents?.url else {
-            print("getPhotosNextPageRequest: error creating url")
-            return nil
-        }
-        
-        var request = URLRequest(url: url)
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.httpMethod = "GET"
-        return request
-    }
-    
     func changeLike(with token: String, photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
         
         assert(Thread.isMainThread)
         
         if taskForLike != nil {
-            print("changeLike: invalid request - another one task")
+            print("ImagesListService.changeLike: invalid request - another one task")
             completion(.failure(ImagesListServiceError.duplicateRequest))
             return
         }
         
         guard let request = changeLikeRequest(with: token, id: photoId, isLike: isLike) else {
-            print("changeLike: request for the image URL is not created")
+            print("ImagesListService.changeLike: request for the image URL is not created")
             completion(.failure(ImagesListServiceError.createRequestError))
             return
         }
@@ -130,7 +117,7 @@ final class ImagesListService {
                 }
                 completion(.success(()))
             case .failure(let error):
-                print("changeLike: \(error.localizedDescription)")
+                print("ImagesListService.changeLike: \(error.localizedDescription)")
                 completion(.failure(error))
             }
             self.taskForLike = nil
@@ -139,9 +126,28 @@ final class ImagesListService {
         task.resume()
     }
     
+    private func getPhotosNextPageRequest(with token: String, page: Int, perPage: Int) -> URLRequest? {
+        
+        var urlComponents = URLComponents(string: Constants.defaultBaseURL.absoluteString + "/photos")
+        urlComponents?.queryItems = [
+            URLQueryItem(name: "page", value: "\(page)"),
+            URLQueryItem(name: "per_page", value: "\(perPage)")
+        ]
+        
+        guard let url = urlComponents?.url else {
+            print("ImagesListService.getPhotosNextPageRequest: error creating url")
+            return nil
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.httpMethod = "GET"
+        return request
+    }
+    
     private func changeLikeRequest(with authToken: String, id: String, isLike: Bool) -> URLRequest? {
         guard let url = URL(string: Constants.defaultBaseURL.absoluteString + "/photos/\(id)/like") else {
-            print("changeLikeRequest: error creating url")
+            print("ImagesListService.changeLikeRequest: error creating url")
             return nil
         }
         var request = URLRequest(url: url)

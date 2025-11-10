@@ -5,19 +5,17 @@
 
 import UIKit
 
-struct ProfileResult: Decodable {
-    let username: String
-    let first_name: String
-    let last_name: String?
-    let bio: String?
-}
-
 enum ProfileError: Error {
     case createRequestError
     case invalidRequest
 }
 
-final class ProfileService {
+protocol ProfileServiceProtocol {
+    var profile: Profile? { get }
+    func fetchProfile(_ token: String, completion: @escaping (Result<Profile, Error>) -> Void)
+}
+
+final class ProfileService: ProfileServiceProtocol {
     
     static let shared = ProfileService()
     
@@ -32,7 +30,7 @@ final class ProfileService {
         assert(Thread.isMainThread)
         task?.cancel()
         guard let request = getProfileRequest(with: token) else{
-            print("fetchProfile: request for the profile is not created")
+            print("ProfileService.fetchProfile: request for the profile is not created")
             completion(.failure(ProfileError.createRequestError))
             return }
         let task = urlSession.objectTask(for: request){ [weak self] (result: Result<ProfileResult, Error>) in
@@ -47,7 +45,7 @@ final class ProfileService {
                 self?.profile = profile
                 completion(.success(profile))
             case .failure(let error):
-                print("fetchProfile: \(error.localizedDescription)")
+                print("ProfileService.fetchProfile: \(error.localizedDescription)")
                 completion(.failure(error))
             }
             self?.task = nil
@@ -58,7 +56,7 @@ final class ProfileService {
     
     private func getProfileRequest(with authToken: String) -> URLRequest? {
         guard let url = URL(string: Constants.defaultBaseURL.absoluteString + "/me") else {
-            print("getProfileRequest: error creating url")
+            print("ProfileService.getProfileRequest: error creating url")
             return nil
         }
         var request = URLRequest(url: url)

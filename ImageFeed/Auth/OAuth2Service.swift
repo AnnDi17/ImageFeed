@@ -29,20 +29,20 @@ final class OAuth2Service{
             if lastCode != code {
                 task?.cancel()
             } else {
-                print("fetchOAuthToken: invalid request - another one task with the same code")
+                print("OAuth2Service.fetchOAuthToken: invalid request - another one task with the same code")
                 completion(.failure(OAuthError.invalidRequest))
                 return
             }
         } else {
             if lastCode == code {
-                print("fetchOAuthToken: invalid request - another one task with the same code")
+                print("OAuth2Service.fetchOAuthToken: invalid request - another one task with the same code")
                 completion(.failure(OAuthError.invalidRequest))
                 return
             }
         }
         lastCode = code
         guard let request = getTokenRequest(code: code) else{
-            print("fetchOAuthToken: request for the token is not created")
+            print("OAuth2Service.fetchOAuthToken: request for the token is not created")
             completion(.failure(OAuthError.createRequestError))
             return }
         let task = URLSession.shared.objectTask(for: request){ [weak self] (result: Result<OAuthTokenResponseBody, Error>) in
@@ -50,7 +50,7 @@ final class OAuth2Service{
             case .success(let data):
                 completion(.success(data.access_token))
             case .failure(let error):
-                print("fetchOAuthToken: \(error.localizedDescription)")
+                print("OAuth2Service.fetchOAuthToken: \(error.localizedDescription)")
                 completion(.failure(error))
             }
             self?.task = nil
@@ -62,7 +62,7 @@ final class OAuth2Service{
     
     private func getTokenRequest(code: String) -> URLRequest? {
         guard var urlComponents = URLComponents(string: Constants.unsplashGetTokenURLString) else {
-            print("getTokenRequest: error creating URL components")
+            print("OAuth2Service.getTokenRequest: error creating URL components")
             return nil
         }
         urlComponents.queryItems = [
@@ -73,7 +73,7 @@ final class OAuth2Service{
             URLQueryItem(name: "grant_type", value: "authorization_code")
         ]
         guard let url = urlComponents.url else {
-            print("getTokenRequest: error creating URL")
+            print("OAuth2Service.getTokenRequest: error creating URL")
             return nil
         }
         var request = URLRequest(url: url)
